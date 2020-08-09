@@ -24,6 +24,8 @@ import (
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 
+	"log"
+
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -40,6 +42,7 @@ type nodeServer struct {
 }
 
 func NewNodeServer(nodeId string, ephemeral bool, maxVolumesPerNode int64) *nodeServer {
+	log.Printf("NewNodeServer: [%+v] [%+v] ", nodeId, ephemeral)
 	return &nodeServer{
 		nodeID:            nodeId,
 		ephemeral:         ephemeral,
@@ -48,7 +51,7 @@ func NewNodeServer(nodeId string, ephemeral bool, maxVolumesPerNode int64) *node
 }
 
 func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
-
+	log.Printf("NodePublishVolume: [%+v] [%+v] ", ctx, req)
 	// Check arguments
 	if req.GetVolumeCapability() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Volume capability missing in request")
@@ -189,7 +192,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 }
 
 func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
-
+	log.Printf("NodeUnpublishVolume: [%+v] [%+v] ", ctx, req)
 	// Check arguments
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume ID missing in request")
@@ -235,7 +238,7 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 }
 
 func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
-
+	log.Printf("NodeStageVolume: [%+v] [%+v] ", ctx, req)
 	// Check arguments
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume ID missing in request")
@@ -251,7 +254,7 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 }
 
 func (ns *nodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
-
+	log.Printf("NodeUnstageVolume: [%+v] [%+v] ", ctx, req)
 	// Check arguments
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume ID missing in request")
@@ -277,7 +280,7 @@ func (ns *nodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoReque
 }
 
 func (ns *nodeServer) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
-
+	log.Printf("NodeGetCapabilities: [%+v] [%+v] ", ctx, req)
 	return &csi.NodeGetCapabilitiesResponse{
 		Capabilities: []*csi.NodeServiceCapability{
 			{
@@ -299,6 +302,7 @@ func (ns *nodeServer) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetC
 }
 
 func (ns *nodeServer) NodeGetVolumeStats(ctx context.Context, in *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
+	log.Printf("NodeGetVolumeStats: [%+v] [%+v] ", ctx, in)
 	return nil, status.Error(codes.Unimplemented, "")
 }
 

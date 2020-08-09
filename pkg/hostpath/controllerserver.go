@@ -32,6 +32,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"log"
+
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	utilexec "k8s.io/utils/exec"
 )
@@ -54,6 +56,8 @@ type controllerServer struct {
 }
 
 func NewControllerServer(ephemeral bool, nodeID string) *controllerServer {
+	log.Printf("NewControllerServer: [%+v] [%+v] ", ephemeral, nodeID)
+
 	if ephemeral {
 		return &controllerServer{caps: getControllerServiceCapabilities(nil), nodeID: nodeID}
 	}
@@ -71,6 +75,7 @@ func NewControllerServer(ephemeral bool, nodeID string) *controllerServer {
 }
 
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
+	log.Printf("CreateVolume: [%+v] [%+v] ", ctx, req)
 	if err := cs.validateControllerServiceRequest(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME); err != nil {
 		glog.V(3).Infof("invalid create volume req: %v", req)
 		return nil, err
@@ -206,6 +211,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 }
 
 func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
+	log.Printf("DeleteVolume: [%+v] [%+v] ", ctx, req)
 	// Check arguments
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume ID missing in request")
@@ -227,13 +233,14 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 }
 
 func (cs *controllerServer) ControllerGetCapabilities(ctx context.Context, req *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
+	log.Printf("ControllerGetCapabilities: [%+v] [%+v] ", ctx, req)
 	return &csi.ControllerGetCapabilitiesResponse{
 		Capabilities: cs.caps,
 	}, nil
 }
 
 func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
-
+	log.Printf("ValidateVolumeCapabilities: [%+v] [%+v] ", ctx, req)
 	// Check arguments
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume ID cannot be empty")
@@ -265,29 +272,35 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 }
 
 func (cs *controllerServer) ControllerPublishVolume(ctx context.Context, req *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
+	log.Printf("ControllerPublishVolume: [%+v] [%+v] ", ctx, req)
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func (cs *controllerServer) ControllerUnpublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
+	log.Printf("ControllerUnpublishVolume: [%+v] [%+v] ", ctx, req)
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func (cs *controllerServer) GetCapacity(ctx context.Context, req *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
+	log.Printf("GetCapacity: [%+v] [%+v] ", ctx, req)
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func (cs *controllerServer) ListVolumes(ctx context.Context, req *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
+	log.Printf("ListVolumes: [%+v] [%+v] ", ctx, req)
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
 // getSnapshotPath returns the full path to where the snapshot is stored
 func getSnapshotPath(snapshotID string) string {
+	log.Printf("getSnapshotPath: [%+v] [%+v] ", snapshotID)
 	return filepath.Join(dataRoot, fmt.Sprintf("%s%s", snapshotID, snapshotExt))
 }
 
 // CreateSnapshot uses tar command to create snapshot for hostpath volume. The tar command can quickly create
 // archives of entire directories. The host image must have "tar" binaries in /bin, /usr/sbin, or /usr/bin.
 func (cs *controllerServer) CreateSnapshot(ctx context.Context, req *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
+	log.Printf("CreateSnapshot: [%+v] [%+v] ", ctx, req)
 	if err := cs.validateControllerServiceRequest(csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT); err != nil {
 		glog.V(3).Infof("invalid create snapshot req: %v", req)
 		return nil, err
@@ -370,6 +383,7 @@ func (cs *controllerServer) CreateSnapshot(ctx context.Context, req *csi.CreateS
 }
 
 func (cs *controllerServer) DeleteSnapshot(ctx context.Context, req *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
+	log.Printf("DeleteSnapshot: [%+v] [%+v] ", ctx, req)
 	// Check arguments
 	if len(req.GetSnapshotId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Snapshot ID missing in request")
@@ -388,6 +402,7 @@ func (cs *controllerServer) DeleteSnapshot(ctx context.Context, req *csi.DeleteS
 }
 
 func (cs *controllerServer) ListSnapshots(ctx context.Context, req *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
+	log.Printf("ListSnapshots: [%+v] [%+v] ", ctx, req)
 	if err := cs.validateControllerServiceRequest(csi.ControllerServiceCapability_RPC_LIST_SNAPSHOTS); err != nil {
 		glog.V(3).Infof("invalid list snapshot req: %v", req)
 		return nil, err
@@ -490,7 +505,7 @@ func (cs *controllerServer) ListSnapshots(ctx context.Context, req *csi.ListSnap
 }
 
 func (cs *controllerServer) ControllerExpandVolume(ctx context.Context, req *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
-
+	log.Printf("ControllerExpandVolume: [%+v] [%+v] ", ctx, req)
 	volID := req.GetVolumeId()
 	if len(volID) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume ID missing in request")
