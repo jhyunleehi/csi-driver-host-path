@@ -32,6 +32,8 @@ import (
 	utilexec "k8s.io/utils/exec"
 
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
+
+	"log"
 )
 
 const (
@@ -100,6 +102,7 @@ func init() {
 }
 
 func NewHostPathDriver(driverName, nodeID, endpoint string, ephemeral bool, maxVolumesPerNode int64, version string) (*hostPath, error) {
+	log.Printf("CreateVolume: [%+v] [%+v] ", ctx, req)
 	if driverName == "" {
 		return nil, errors.New("no driver name provided")
 	}
@@ -133,6 +136,7 @@ func NewHostPathDriver(driverName, nodeID, endpoint string, ephemeral bool, maxV
 }
 
 func getSnapshotID(file string) (bool, string) {
+	log.Printf("CreatgetSnapshotIDeVolume: [%+v] [%+v] ", file, file)
 	glog.V(4).Infof("file: %s", file)
 	// Files with .snap extension are volumesnapshot files.
 	// e.g. foo.snap, foo.bar.snap
@@ -162,6 +166,7 @@ func discoverExistingSnapshots() {
 }
 
 func (hp *hostPath) Run() {
+	log.Printf("Run: ")
 	// Create GRPC servers
 	hp.ids = NewIdentityServer(hp.name, hp.version)
 	hp.ns = NewNodeServer(hp.nodeID, hp.ephemeral, hp.maxVolumesPerNode)
@@ -181,6 +186,7 @@ func getVolumeByID(volumeID string) (hostPathVolume, error) {
 }
 
 func getVolumeByName(volName string) (hostPathVolume, error) {
+	log.Printf("getVolumeByName: [%+v] [%+v] ", volName)
 	for _, hostPathVol := range hostPathVolumes {
 		if hostPathVol.VolName == volName {
 			return hostPathVol, nil
@@ -190,6 +196,7 @@ func getVolumeByName(volName string) (hostPathVolume, error) {
 }
 
 func getSnapshotByName(name string) (hostPathSnapshot, error) {
+	log.Printf("CreateVolume: [%+v]", name)
 	for _, snapshot := range hostPathVolumeSnapshots {
 		if snapshot.Name == name {
 			return snapshot, nil
@@ -206,6 +213,7 @@ func getVolumePath(volID string) string {
 // createVolume create the directory for the hostpath volume.
 // It returns the volume path or err if one occurs.
 func createHostpathVolume(volID, name string, cap int64, volAccessType accessType, ephemeral bool) (*hostPathVolume, error) {
+	log.Printf("createHostpathVolume: [%+v] [%+v] ", volID, cap)
 	path := getVolumePath(volID)
 
 	switch volAccessType {
@@ -251,6 +259,7 @@ func createHostpathVolume(volID, name string, cap int64, volAccessType accessTyp
 
 // updateVolume updates the existing hostpath volume.
 func updateHostpathVolume(volID string, volume hostPathVolume) error {
+	log.Printf("updateHostpathVolume: [%+v] [%+v] ", volID, volume)
 	glog.V(4).Infof("updating hostpath volume: %s", volID)
 
 	if _, err := getVolumeByID(volID); err != nil {
@@ -263,6 +272,7 @@ func updateHostpathVolume(volID string, volume hostPathVolume) error {
 
 // deleteVolume deletes the directory for the hostpath volume.
 func deleteHostpathVolume(volID string) error {
+	log.Printf("deleteHostpathVolume: [%+v]  ", volID)
 	glog.V(4).Infof("deleting hostpath volume: %s", volID)
 
 	vol, err := getVolumeByID(volID)
@@ -299,6 +309,7 @@ func deleteHostpathVolume(volID string) error {
 // hostPathIsEmpty is a simple check to determine if the specified hostpath directory
 // is empty or not.
 func hostPathIsEmpty(p string) (bool, error) {
+	log.Printf("hostPathIsEmpty: [%+v] ", p)
 	f, err := os.Open(p)
 	if err != nil {
 		return true, fmt.Errorf("unable to open hostpath volume, error: %v", err)
@@ -314,6 +325,7 @@ func hostPathIsEmpty(p string) (bool, error) {
 
 // loadFromSnapshot populates the given destPath with data from the snapshotID
 func loadFromSnapshot(size int64, snapshotId, destPath string, mode accessType) error {
+	log.Printf("loadFromSnapshot: [%+v][%+v][%+v] ", snapshotId, destPath, destPath)
 	snapshot, ok := hostPathVolumeSnapshots[snapshotId]
 	if !ok {
 		return status.Errorf(codes.NotFound, "cannot find snapshot %v", snapshotId)
@@ -345,6 +357,7 @@ func loadFromSnapshot(size int64, snapshotId, destPath string, mode accessType) 
 
 // loadFromVolume populates the given destPath with data from the srcVolumeID
 func loadFromVolume(size int64, srcVolumeId, destPath string, mode accessType) error {
+	log.Printf("loadFromVolume: [%+v][%+v][%+v] ", size, srcVolumeId, mode)
 	hostPathVolume, ok := hostPathVolumes[srcVolumeId]
 	if !ok {
 		return status.Error(codes.NotFound, "source volumeId does not exist, are source/destination in the same storage class?")
@@ -367,6 +380,7 @@ func loadFromVolume(size int64, srcVolumeId, destPath string, mode accessType) e
 }
 
 func loadFromFilesystemVolume(hostPathVolume hostPathVolume, destPath string) error {
+	log.Printf("loadFromFilesystemVolume: [%+v][%+v][%+v] ", hostPathVolume, destPath, destPath)
 	srcPath := hostPathVolume.VolPath
 	isEmpty, err := hostPathIsEmpty(srcPath)
 	if err != nil {
@@ -386,6 +400,7 @@ func loadFromFilesystemVolume(hostPathVolume hostPathVolume, destPath string) er
 }
 
 func loadFromBlockVolume(hostPathVolume hostPathVolume, destPath string) error {
+	log.Printf("loadFromBlockVolume: [%+v][%+v][%+v] ", hostPathVolume, destPath, destPath)
 	srcPath := hostPathVolume.VolPath
 	args := []string{"if=" + srcPath, "of=" + destPath}
 	executor := utilexec.New()
