@@ -102,7 +102,7 @@ func init() {
 }
 
 func NewHostPathDriver(driverName, nodeID, endpoint string, ephemeral bool, maxVolumesPerNode int64, version string) (*hostPath, error) {
-	log.Printf("CreateVolume: [%+v] [%+v] ", ctx, req)
+	log.Printf("NewHostPathDriver: [%+v] [%+v] [%+v] ", driverName, nodeID, endpoint)
 	if driverName == "" {
 		return nil, errors.New("no driver name provided")
 	}
